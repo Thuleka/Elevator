@@ -1,0 +1,108 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+class Elevator
+{
+    public int CurrentFloor { get; private set; }
+    public bool IsMoving { get; private set; }
+    public int MaxCapacity { get; private set; }
+    public int CurrentCapacity { get; private set; }
+    public List<int> DestinationFloors { get; private set; }
+
+    public Elevator(int maxCapacity)
+    {
+        CurrentFloor = 1; // Elevator starts on the first floor
+        IsMoving = false;
+        MaxCapacity = maxCapacity;
+        CurrentCapacity = 0;
+        DestinationFloors = new List<int>();
+    }
+
+    public void MoveToFloor(int floor)
+    {
+        if (CurrentFloor < floor)
+        {
+            IsMoving = true;
+            while (CurrentFloor < floor)
+            {
+                CurrentFloor++;
+                Console.WriteLine($"Elevator is moving up. Current Floor: {CurrentFloor}");
+            }
+            IsMoving = false;
+        }
+        else if (CurrentFloor > floor)
+        {
+            IsMoving = true;
+            while (CurrentFloor > floor)
+            {
+                CurrentFloor--;
+                Console.WriteLine($"Elevator is moving down. Current Floor: {CurrentFloor}");
+            }
+            IsMoving = false;
+        }
+        // Remove the current floor from the destination list
+        DestinationFloors.Remove(floor);
+    }
+
+    public void AddPassenger(int weight)
+    {
+        if (CurrentCapacity + weight <= MaxCapacity)
+        {
+            CurrentCapacity += weight;
+        }
+        else
+        {
+            Console.WriteLine("Elevator is at capacity. Cannot add more passengers.");
+        }
+    }
+}
+
+class Building
+{
+    public List<Elevator> Elevators { get; private set; }
+
+    public Building(int elevatorCount, int maxCapacity)
+    {
+        Elevators = new List<Elevator>();
+        for (int i = 0; i < elevatorCount; i++)
+        {
+            Elevators.Add(new Elevator(maxCapacity));
+        }
+    }
+
+    public void CallElevator(int floor, int passengers)
+    {
+        // Find the nearest available elevator to the requested floor
+        Elevator nearestElevator = Elevators
+            .Where(elevator => !elevator.IsMoving)
+            .OrderBy(elevator => Math.Abs(elevator.CurrentFloor - floor))
+            .First();
+
+        nearestElevator.DestinationFloors.Add(floor);
+        nearestElevator.AddPassenger(passengers);
+        nearestElevator.MoveToFloor(floor);
+        Console.WriteLine($"Elevator arrived at floor {floor}.");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Initialize the building with 2 elevators, each with a max capacity of 10.
+        Building building = new Building(elevatorCount: 2, maxCapacity: 10);
+
+        while (true)
+        {
+            Console.WriteLine("Enter a floor number to call an elevator (or -1 to exit):");
+            int floor = int.Parse(Console.ReadLine());
+            if (floor == -1) break;
+
+            Console.WriteLine("Enter the number of passengers:");
+            int passengers = int.Parse(Console.ReadLine());
+
+            building.CallElevator(floor, passengers);
+        }
+    }
+}
